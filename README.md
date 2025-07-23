@@ -139,5 +139,5 @@ com.example.paidly
 ---
 
 ## License
-
+ 
 This project welcomes collaboration and feedback. Feel free to fork the repository or open issues and pull requests.
