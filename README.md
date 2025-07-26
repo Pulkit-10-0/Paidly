@@ -137,6 +137,18 @@ com.example.paidly
 - Biometric authentication for security
 
 ---
+## 📥 How to Clone and Run
+
+```bash
+# Clone the repository
+git clone https://github.com/Pulkit-10-0/Paidly.git
+
+# Open the project in Android Studio
+# Let Gradle sync and dependencies resolve
+
+# Run the app on an emulator or Android device
+```
+---
 
 ## License
  
