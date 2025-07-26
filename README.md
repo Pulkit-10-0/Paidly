@@ -93,30 +93,42 @@ Paidly is a modern Android application developed using Jetpack Compose, designed
 
 ## Folder Structure
 
+```plaintext
 com.example.paidly
 │
-├── data.local                 # Room database setup
-│   ├── PaymentReminderDao.kt
-│   ├── PaymentReminderEntity.kt
-│   └── PaidlyDatabase.kt
+├── data
+│   ├── local                  # Room database setup
+│   │   ├── PaidlyDatabase.kt
+│   │   ├── PaymentReminderDao.kt
+│   │   └── PaymentReminderEntity.kt
+│   └── model                  # Data models/entities
 │
-├── ui.screens                 # Jetpack Compose UI screens
-│   ├── HomeScreen.kt
-│   ├── HistoryScreen.kt
-│   ├── NotificationSettingsScreen.kt
-│   └── ReminderDetailsBottomSheet.kt
+├── navigation                 # Navigation graphs and components
+│   ├── AppNavigation.kt
+│   ├── NavigationDrawerContent.kt
+│   └── Screen.kt
 │
-├── utils                      # Utility classes and workers
-│   ├── NotificationWorker.kt
-│   ├── NotificationUtils.kt
-│   ├── NotificationPreferenceManager.kt
+├── ui                         # User Interface components
+│   ├── components             # Reusable UI elements
+│   ├── screens                # Individual screens
+│   │   ├── HistoryScreen.kt
+│   │   ├── HomeScreen.kt
+│   │   └── NotificationSettingsScreen.kt
+│   └── theme                  # Theming (colors, typography)
+│
+├── viewmodel                  # ViewModels for UI logic
+│   ├── HomeViewModel.kt
+│   └── HomeViewModelFactory.kt
+│
+├── utils                      # Utility classes and background tasks
 │   ├── BootReceiver.kt
-│   └── scheduleDailyReminder.kt
+│   ├── NotificationPreferenceManager.kt
+│   ├── NotificationScheduler.kt
+│   └── NotificationUtils.kt
+│   └── NotificationWorker.kt
 │
-├── navigation
-│   └── AppNavigation.kt
-│
-└── MainActivity.kt
+└── MainActivity.kt            # Main application activity
+```
 ---
 
 ## Permissions Used
