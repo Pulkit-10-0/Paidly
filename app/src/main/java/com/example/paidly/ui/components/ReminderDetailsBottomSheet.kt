@@ -37,9 +37,17 @@ fun ReminderDetailsBottomSheet(
 
     var showDatePickerForDueDate by remember { mutableStateOf(false) }
     var showDatePickerForPaidDate by remember { mutableStateOf(false) }
+    var showPartialPaymentDialog by remember { mutableStateOf(false) }
+    var showNextDueDatePicker by remember { mutableStateOf(false) }
 
-    var expandedRepeat by remember { mutableStateOf(false) }
-    var expandedDirection by remember { mutableStateOf(false) }
+    var nextPartialDueDate by remember { mutableStateOf(LocalDate.now()) }
+    var paidAmount by remember { mutableStateOf("") }
+
+
+    val expandedRepeat = remember { mutableStateOf(false) }
+    val expandedDirection = remember { mutableStateOf(false) }
+
+    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
 
     val isNoteModified = note.trim() != reminder.note
     val isInfoModified = name != reminder.name ||
@@ -48,8 +56,7 @@ fun ReminderDetailsBottomSheet(
             recurringType != reminder.recurringType ||
             direction != reminder.direction
 
-    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
-
+    // Date pickers
     if (showDatePickerForDueDate) {
         val calendar = Calendar.getInstance()
         DatePickerDialog(
@@ -65,7 +72,7 @@ fun ReminderDetailsBottomSheet(
     }
 
     if (showDatePickerForPaidDate) {
-        val calendar = Calendar.getInstance()
+        val today = LocalDate.now()
         DatePickerDialog(
             context,
             { _: DatePicker, year: Int, month: Int, day: Int ->
@@ -74,12 +81,24 @@ fun ReminderDetailsBottomSheet(
                 showDatePickerForPaidDate = false
                 onDismiss()
             },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+            today.year, today.monthValue - 1, today.dayOfMonth
         ).show()
     }
 
+    if (showNextDueDatePicker) {
+        DatePickerDialog(
+            context,
+            { _: DatePicker, year: Int, month: Int, day: Int ->
+                nextPartialDueDate = LocalDate.of(year, month + 1, day)
+                showNextDueDatePicker = false
+            },
+            nextPartialDueDate.year,
+            nextPartialDueDate.monthValue - 1,
+            nextPartialDueDate.dayOfMonth
+        ).show()
+    }
+
+    // Bottom sheet UI
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Edit Reminder", style = MaterialTheme.typography.titleLarge)
@@ -110,38 +129,33 @@ fun ReminderDetailsBottomSheet(
                 enabled = false,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showDatePickerForDueDate = true },
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = LocalContentColor.current,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    .clickable { showDatePickerForDueDate = true }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             ExposedDropdownMenuBox(
-                expanded = expandedRepeat,
-                onExpandedChange = { expandedRepeat = !expandedRepeat }
+                expanded = expandedRepeat.value,
+                onExpandedChange = { expandedRepeat.value = !expandedRepeat.value }
             ) {
                 OutlinedTextField(
                     readOnly = true,
                     value = recurringType,
                     onValueChange = {},
                     label = { Text("Repeat") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expandedRepeat) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expandedRepeat.value) },
                     modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
-                    expanded = expandedRepeat,
-                    onDismissRequest = { expandedRepeat = false }
+                    expanded = expandedRepeat.value,
+                    onDismissRequest = { expandedRepeat.value = false }
                 ) {
                     listOf("None", "Daily", "Weekly", "Monthly").forEach { type ->
                         DropdownMenuItem(
                             text = { Text(type) },
                             onClick = {
                                 recurringType = type
-                                expandedRepeat = false
+                                expandedRepeat.value = false
                             }
                         )
                     }
@@ -151,27 +165,27 @@ fun ReminderDetailsBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             ExposedDropdownMenuBox(
-                expanded = expandedDirection,
-                onExpandedChange = { expandedDirection = !expandedDirection }
+                expanded = expandedDirection.value,
+                onExpandedChange = { expandedDirection.value = !expandedDirection.value }
             ) {
                 OutlinedTextField(
                     readOnly = true,
                     value = if (direction == "TO_PAY") "To Pay" else "To Receive",
                     onValueChange = {},
                     label = { Text("Direction") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expandedDirection) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expandedDirection.value) },
                     modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
-                    expanded = expandedDirection,
-                    onDismissRequest = { expandedDirection = false }
+                    expanded = expandedDirection.value,
+                    onDismissRequest = { expandedDirection.value = false }
                 ) {
                     listOf("TO_PAY", "TO_RECEIVE").forEach { dir ->
                         DropdownMenuItem(
                             text = { Text(if (dir == "TO_PAY") "To Pay" else "To Receive") },
                             onClick = {
                                 direction = dir
-                                expandedDirection = false
+                                expandedDirection.value = false
                             }
                         )
                     }
@@ -216,6 +230,14 @@ fun ReminderDetailsBottomSheet(
                 ) {
                     Text("Mark as Paid")
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = { showPartialPaymentDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Mark as Partially Paid")
+                }
             } else {
                 Button(
                     onClick = {
@@ -247,5 +269,73 @@ fun ReminderDetailsBottomSheet(
                 Text("Delete")
             }
         }
+    }
+
+    // Partial Payment Dialog
+    if (showPartialPaymentDialog) {
+        AlertDialog(
+            onDismissRequest = { showPartialPaymentDialog = false },
+            title = { Text("Partial Payment") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = paidAmount,
+                        onValueChange = { paidAmount = it },
+                        label = { Text("Amount Paid Today") },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = nextPartialDueDate.format(formatter),
+                        onValueChange = {},
+                        label = { Text("Next Due Date") },
+                        readOnly = true,
+                        enabled = false,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showNextDueDatePicker = true }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val paid = paidAmount.toDoubleOrNull() ?: 0.0
+                        val remaining = reminder.amount - paid
+
+                        // Remove previous partial note (if exists)
+                        val baseNote = reminder.note
+                            .lineSequence()
+                            .filterNot { it.startsWith("Partially paid ₹") }
+                            .joinToString("\n")
+                            .trim()
+
+                        val updated = reminder.copy(
+                            partialAmountPaid = paid,
+                            partialDueDate = nextPartialDueDate.toString(),
+                            status = "PARTIALLY_PAID",
+                            note = if (baseNote.isEmpty())
+                                "Partially paid ₹$paid, remaining ₹$remaining"
+                            else
+                                "$baseNote\nPartially paid ₹$paid, remaining ₹$remaining"
+                        )
+
+                        onNoteChange(updated)
+                        showPartialPaymentDialog = false
+                        onDismiss()
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showPartialPaymentDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

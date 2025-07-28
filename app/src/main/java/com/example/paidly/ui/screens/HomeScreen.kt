@@ -23,8 +23,6 @@ import com.example.paidly.data.model.PaymentStatus
 import com.example.paidly.ui.components.PaymentCard
 import com.example.paidly.ui.components.ReminderDetailsBottomSheet
 import com.example.paidly.ui.viewmodel.HomeViewModel
-import com.example.paidly.utils.createNotificationChannel
-import com.example.paidly.utils.showDueNotification
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -46,8 +44,6 @@ fun HomeScreen(
     var selectedReminder by remember { mutableStateOf<PaymentReminderEntity?>(null) }
     val gridState = rememberLazyGridState()
     val context = LocalContext.current
-
-
 
     val filteredReminders = when (filterType) {
         "TO_PAY" -> reminders.filter { !it.isReceived && it.amount > 0 }
@@ -90,7 +86,7 @@ fun HomeScreen(
             } else {
                 items(filteredReminders) { reminder ->
                     PaymentCard(
-                        reminder = reminder.copy(amount = kotlin.math.abs(reminder.amount)), //  Show absolute amount
+                        reminder = reminder.copy(amount = kotlin.math.abs(reminder.amount)), // Show absolute amount
                         onClick = { selectedReminder = it }
                     )
                 }
@@ -103,10 +99,10 @@ fun HomeScreen(
         var amount by remember { mutableStateOf("") }
         var date by remember { mutableStateOf(LocalDate.now()) }
         var recurrence by remember { mutableStateOf("None") }
-        var direction by remember { mutableStateOf("To Pay") }
+        var direction by remember { mutableStateOf("TO_RECEIVE") }
 
         val recurrenceOptions = listOf("None", "Daily", "Weekly", "Monthly")
-        val directions = listOf("To Pay", "To Receive")
+        val directions = mapOf("TO_PAY" to "To Pay", "TO_RECEIVE" to "To Receive")
 
         val isValid = name.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) != 0.0
 
@@ -133,7 +129,6 @@ fun HomeScreen(
                 )
 
                 Spacer(Modifier.height(12.dp))
-                val context = LocalContext.current
                 OutlinedTextField(
                     value = date.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                     onValueChange = {},
@@ -193,7 +188,7 @@ fun HomeScreen(
                     onExpandedChange = { typeExpanded = !typeExpanded }
                 ) {
                     OutlinedTextField(
-                        value = direction,
+                        value = directions[direction] ?: "To Pay",
                         onValueChange = {},
                         label = { Text("Payment Type") },
                         readOnly = true,
@@ -204,11 +199,11 @@ fun HomeScreen(
                         expanded = typeExpanded,
                         onDismissRequest = { typeExpanded = false }
                     ) {
-                        directions.forEach {
+                        directions.forEach { (internal, display) ->
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(display) },
                                 onClick = {
-                                    direction = it
+                                    direction = internal
                                     typeExpanded = false
                                 }
                             )
@@ -220,7 +215,7 @@ fun HomeScreen(
                 Button(
                     onClick = {
                         val amt = amount.toDoubleOrNull() ?: 0.0
-                        val signedAmount = if (direction == "To Receive") -amt else amt
+                        val signedAmount = if (direction == "TO_RECEIVE") -amt else amt
 
                         val reminder = PaymentReminderEntity(
                             name = name,
@@ -232,7 +227,7 @@ fun HomeScreen(
                             month = "${date.month.name} ${date.year}",
                             recurringType = recurrence,
                             note = "",
-                            direction = if (direction == "To Receive") "TO_RECEIVE" else "TO_PAY"
+                            direction = direction
                         )
 
                         showSheet = false
@@ -250,7 +245,7 @@ fun HomeScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = isValid // ✅ Disable if form invalid
+                    enabled = isValid
                 ) {
                     Text("Add")
                 }

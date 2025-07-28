@@ -24,4 +24,5 @@ interface PaymentReminderDao {
     @Query("SELECT * FROM payment_reminders WHERE isReceived = 0 AND dueDate = :today")
     suspend fun getDueReminders(today: String): List<PaymentReminderEntity>
 
+
 }

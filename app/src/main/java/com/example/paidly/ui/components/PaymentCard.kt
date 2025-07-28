@@ -25,11 +25,12 @@ fun PaymentCard(
     val today = LocalDate.now()
     val daysLeft = ChronoUnit.DAYS.between(today, dueDate)
 
-
     val defaultColor = when {
-        daysLeft == 0L -> Color(0xFFE53935)
-        daysLeft in 1..3-> Color(0xFFFB8C00)
-        else -> Color(0xFF43A047)
+        !reminder.isReceived && daysLeft < 0 -> Color(0xFFB71C1C)
+        !reminder.isReceived && daysLeft == 0L -> Color(0xFFE53935)
+        !reminder.isReceived && daysLeft in 1..3 -> Color(0xFFFB8C00)
+        !reminder.isReceived -> Color(0xFF43A047)
+        else -> Color(0xFFBDBDBD)
     }
 
     val actualColor = cardColor ?: defaultColor
@@ -68,18 +69,47 @@ fun PaymentCard(
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            val formattedDueDate = dueDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-            Text("Due: $formattedDueDate")
-            Text("Repeat: ${reminder.recurringType}")
-            if (reminder.isReceived) {
-                val formattedPaidDate = reminder.paidDate?.let {
-                    LocalDate.parse(it).format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                } ?: "Unknown"
-                Text("Status: Received on $formattedPaidDate")
-            } else {
-                Text("Status: Pending")
+            Spacer(Modifier.height(5.dp))
+
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+            val formattedDueDate = dueDate.format(formatter)
+
+            when {
+                reminder.isReceived -> {
+                    val formattedPaidDate = reminder.paidDate?.let {
+                        LocalDate.parse(it).format(formatter)
+                    } ?: "Unknown"
+                    Text("Status: Received on $formattedPaidDate")
+                }
+                reminder.status == "PARTIALLY_PAID" -> {
+                    val paid = reminder.partialAmountPaid ?: 0.0
+                    val remaining = reminder.amount - paid
+                    val newDue = reminder.partialDueDate?.let {
+                        LocalDate.parse(it).format(formatter)
+                    } ?: formattedDueDate
+                    Text("Partially paid: ₹$paid")
+                    Text("Remaining: ₹$remaining")
+                    Text("Next due: $newDue")
+                }
+                dueDate.isBefore(today) -> {
+                    Text("Status: Overdue", color = Color.Yellow, fontWeight = FontWeight.Bold)
+                    Text("Due: $formattedDueDate")
+                }
+                else -> {
+                    Text("Due: $formattedDueDate")
+                    Text("Status: Pending")
+                }
             }
+
+            Spacer(Modifier.height(3.dp))
+            Text("Repeat: ${reminder.recurringType}")
+            Spacer(Modifier.height(3.dp))
             Text("Direction: $paymentDirection")
+
+            if (reminder.note.isNotBlank()) {
+                Spacer(Modifier.height(3.dp))
+                Text("Note: ${reminder.note}")
+            }
         }
     }
 }
@@ -91,13 +121,16 @@ fun PaymentCardPreview() {
         id = 1,
         name = "Test Payment",
         amount = 2500.0,
-        dueDate = LocalDate.now().plusDays(5).toString(),
+        dueDate = LocalDate.now().plusDays(-1).toString(),
         isReceived = false,
-        status = "FUTURE",
+        status = "PARTIALLY_PAID",
+        partialAmountPaid = 500.0,
+        partialDueDate = LocalDate.now().plusDays(7).toString(),
         personName = "John Doe",
         month = "JULY 2025",
         recurringType = "Monthly",
-        direction = "TO_PAY"
+        direction = "TO_PAY",
+        note = "This is a test note"
     )
 
     MaterialTheme {
