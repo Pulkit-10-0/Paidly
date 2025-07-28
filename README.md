@@ -47,6 +47,19 @@ Paidly is a modern Android application developed using Jetpack Compose, designed
 
 ---
 
+
+## 📸 App Screenshots
+
+<p align="center">
+  <img src="screenshots/1.png" width="250" style="margin: 50px;"/>
+  <img src="screenshots/2.png" width="250" style="margin: 50px;"/>
+  <img src="screenshots/4.png" width="250" style="margin: 50px;"/>
+  <img src="screenshots/3.png" width="250" style="margin: 50px;"/>
+  <img src="screenshots/5.png" width="250" style="margin: 50px;"/>
+</p>
+---
+
+
 ## Tech Stack
 
 | Component         | Technology                         |
@@ -80,30 +93,42 @@ Paidly is a modern Android application developed using Jetpack Compose, designed
 
 ## Folder Structure
 
+```plaintext
 com.example.paidly
 │
-├── data.local                 # Room database setup
-│   ├── PaymentReminderDao.kt
-│   ├── PaymentReminderEntity.kt
-│   └── PaidlyDatabase.kt
+├── data
+│   ├── local                  # Room database setup
+│   │   ├── PaidlyDatabase.kt
+│   │   ├── PaymentReminderDao.kt
+│   │   └── PaymentReminderEntity.kt
+│   └── model                  # Data models/entities
 │
-├── ui.screens                 # Jetpack Compose UI screens
-│   ├── HomeScreen.kt
-│   ├── HistoryScreen.kt
-│   ├── NotificationSettingsScreen.kt
-│   └── ReminderDetailsBottomSheet.kt
+├── navigation                 # Navigation graphs and components
+│   ├── AppNavigation.kt
+│   ├── NavigationDrawerContent.kt
+│   └── Screen.kt
 │
-├── utils                      # Utility classes and workers
-│   ├── NotificationWorker.kt
-│   ├── NotificationUtils.kt
-│   ├── NotificationPreferenceManager.kt
+├── ui                         # User Interface components
+│   ├── components             # Reusable UI elements
+│   ├── screens                # Individual screens
+│   │   ├── HistoryScreen.kt
+│   │   ├── HomeScreen.kt
+│   │   └── NotificationSettingsScreen.kt
+│   └── theme                  # Theming (colors, typography)
+│
+├── viewmodel                  # ViewModels for UI logic
+│   ├── HomeViewModel.kt
+│   └── HomeViewModelFactory.kt
+│
+├── utils                      # Utility classes and background tasks
 │   ├── BootReceiver.kt
-│   └── scheduleDailyReminder.kt
+│   ├── NotificationPreferenceManager.kt
+│   ├── NotificationScheduler.kt
+│   └── NotificationUtils.kt
+│   └── NotificationWorker.kt
 │
-├── navigation
-│   └── AppNavigation.kt
-│
-└── MainActivity.kt
+└── MainActivity.kt            # Main application activity
+```
 ---
 
 ## Permissions Used
@@ -124,7 +149,19 @@ com.example.paidly
 - Biometric authentication for security
 
 ---
+## 📥 How to Clone and Run
+
+```bash
+# Clone the repository
+git clone https://github.com/Pulkit-10-0/Paidly.git
+
+# Open the project in Android Studio
+# Let Gradle sync and dependencies resolve
+
+# Run the app on an emulator or Android device
+```
+---
 
 ## License
-
+ 
 This project welcomes collaboration and feedback. Feel free to fork the repository or open issues and pull requests.
